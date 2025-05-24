@@ -11,7 +11,7 @@ const theme = createTheme({
       contrastText: '#000',
     },
     secondary: {
-      main: '#fff',
+      main: '#000',
     },
   },
   components: {
@@ -39,6 +39,6 @@ createRoot(document.getElementById('root')!).render(
   <ThemeProvider theme={theme}>
     <StrictMode>
       <App />
-    </StrictMode>,
-  </ThemeProvider>,
+    </StrictMode>
+  </ThemeProvider>
 )
