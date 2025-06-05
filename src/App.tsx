@@ -1,12 +1,17 @@
 import { useEffect, useState } from 'react'
 import './App.css'
-import { Alert, Box, Button, IconButton, Modal, Snackbar, TextareaAutosize, TextField, Typography } from '@mui/material'
+import { Alert, Autocomplete, Box, Button, IconButton, Modal, Slider, Snackbar, TextareaAutosize, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import * as HobbyClient from './client/hobby.tsx';
+import * as CategoryClient from './client/category.tsx';
 import type { Hobby } from './interfaces/Hobby.tsx';
-import type { Hobbies } from './interfaces/Hobbies.tsx';
+import { Label } from '@mui/icons-material';
+import type { Category } from './interfaces/Category.tsx';
+import CategoryToggleGroup from './components/CategoryToggleGroup.tsx';
+import type { Point } from './interfaces/Point.tsx';
+import PlusMinusInputs from './components/PlusMinusInputs.tsx';
 
 
 function App() {
@@ -14,12 +19,22 @@ function App() {
     id: Date.now(),
     name: "",
     description: "",
+    interestLevel: 0,
+    effortLevel: 0,
+    categories: [],
+    pluspoints: [],
+    minuspoints: [],
     //image: "",
   })
   const [editHobby, setEditHobby] = useState<Hobby>({
     id: Date.now(),
     name: "",
     description: "",
+    interestLevel: 0,
+    effortLevel: 0,
+    categories: [],
+    pluspoints: [],
+    minuspoints: [],
     //image: "",
   })
 
@@ -34,6 +49,34 @@ function App() {
   const [openToast, setOpenToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<ToastType>(ToastType.ERROR)
+  const [categories, setCategories] = useState<Category[]>([])
+  const [plusPoints, setPlusPoints] = useState<Point[]>([{ id: Date.now(), text: "", hobbyId: 0 }]);
+  const [minusPoints, setMinusPoints] = useState<Point[]>([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
+
+  {/* management of plus and minuspoints */}
+  const updatePoint = (type: "plus" | "minus", index: number, value: string) => {
+    const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+    const state = type === "plus" ? plusPoints : minusPoints;
+
+    const updated = [...state];
+    updated[index] = { ...updated[index], text: value, hobbyId: null };
+    setter(updated);
+  };
+
+  const addPoint = (type: "plus" | "minus") => {
+    const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+    setter((prev) => [...prev, { id: Date.now(), text: "", hobbyId: currentHobby.id }]);
+  };
+
+  const removePoint = (type: "plus" | "minus", index: number) => {
+    const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+    const current = type === "plus" ? plusPoints : minusPoints;
+
+    const updated = [...current];
+    updated.splice(index, 1);
+    setter(updated);
+  };
+  {/* management of plus and minuspoints */}
 
   const closeHobbyEditModal = () => {
     setOpenHobbyEditModal(false)
@@ -45,12 +88,22 @@ function App() {
       id: 0,
       name: "",
       description: "",
+      interestLevel: 0,
+      effortLevel: 0,
+      categories: [],
+      pluspoints: [],
+      minuspoints: [],
       //image: "",
     });
     setCurrentHobby((prev) => ({
       id: prev.id,
       name: "",
       description: "",
+      interestLevel: 0,
+      effortLevel: 0,
+      categories: [],
+      pluspoints: [],
+      minuspoints: [],
       //image: "",
     }));
     setOpenHobbyEditModal(true);
@@ -61,7 +114,10 @@ function App() {
   }
 
   const handleEditHobby = (editHobby: Hobby) => {
+    console.log("editHobby", editHobby);
     setCurrentHobby(editHobby);
+    setPlusPoints(editHobby.pluspoints || [{ id: Date.now(), text: "", hobbyId: editHobby.id }]);
+    setMinusPoints(editHobby.minuspoints || [{ id: Date.now() + 1, text: "", hobbyId: editHobby.id }]);
     setEditHobby(editHobby);
     setOpenHobbyEditModal(true);
   }
@@ -76,6 +132,11 @@ function App() {
       id: Date.now(),
       name: currentHobby.name,
       description: currentHobby.description,
+      interestLevel: currentHobby.interestLevel || 0,
+      effortLevel: currentHobby.effortLevel || 0,
+      categories: currentHobby.categories,
+      pluspoints: currentHobby.pluspoints,
+      minuspoints: currentHobby.minuspoints,
       //image: currentHobby.image,
     };
 
@@ -95,6 +156,7 @@ function App() {
       }
     } else {
       try {
+        // add hobby
         await postHobby(currentHobby);
         setHobbies((prev) =>
           [...(prev || []), newHobby]
@@ -114,7 +176,19 @@ function App() {
     try {
       HobbyClient.getAllHobbies().then((res) => {
         setHobbies(res.data);
-        console.log(res.data);
+        console.log("hobbies", res.data);
+      }).catch((err) => {
+        console.error("Error fetching hobbies:", err);
+      });
+    } catch (error) {
+      console.error("Error in getAllHobbies:", error);
+    }
+  }
+
+  const getAllCategories = async () => {
+    try {
+      CategoryClient.getAllCategories().then((res) => {
+        setCategories(res.data);
       }).catch((err) => {
         console.error("Error fetching hobbies:", err);
       });
@@ -137,21 +211,27 @@ function App() {
 
   useEffect(() => {
     getAllHobbies();
+    getAllCategories();
   }, []);
 
   useEffect(() => {
-    console.log("hobbies fetched", hobbies);
-  }, [hobbies]);
+    setCurrentHobby((prev) => ({
+      ...prev,
+      pluspoints: plusPoints,
+      minuspoints: minusPoints,
+    }));  
+  }, [plusPoints, minusPoints]);
+
 
   useEffect(() => {
-    console.log("current hobby: ", currentHobby);
-  }, [currentHobby]);
+    console.log("categories", categories);
+  }, [categories]);
 
   const renderHobbyEditModal = () => {
     return (
       <Modal className='flex justify-center align-center' open={openHobbyEditModal} onClose={closeHobbyEditModal} component="div">
         <div className='w-auto h-auto flex justify-center align-center flex-col rounded-3xl'>
-          <div className='bg-neutral-950 p-6 rounded-xl flex flex-col'>
+          <div className='bg-neutral-950 p-12 rounded-xl flex flex-col scroll-auto'>
             <IconButton
               onClick={closeHobbyEditModal}
               className="absolute! top-2! right-2! text-white"
@@ -168,8 +248,50 @@ function App() {
             <TextareaAutosize className='text-white border-gray-500 border-[1px] rounded-sm mb-2 p-1' value={currentHobby.description} color='primary' onChange={(e) => setCurrentHobby((prev) => ({ ...prev, description: e.target.value }))} minRows={3} placeholder="Description">
             </TextareaAutosize>
 
-            <Button variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
+            <Typography gutterBottom>
+              Interest Level
+            </Typography>
+            <Slider
+              aria-label="Small steps"
+              defaultValue={0}
+              value={currentHobby.interestLevel}
+              onChange={(e, newValue) => setCurrentHobby((prev) => ({ ...prev, interestLevel: newValue as number }))}
+              step={1}
+              marks
+              min={0}
+              max={10}
+              valueLabelDisplay="auto"
+            />
 
+            <Typography gutterBottom>
+              Effort Level
+            </Typography>
+            <Slider
+              aria-label="Small steps"
+              defaultValue={0}
+              value={currentHobby.effortLevel}
+              onChange={(e, newValue) => setCurrentHobby((prev) => ({ ...prev, effortLevel: newValue as number }))}
+              step={1}
+              marks
+              min={0}
+              max={10}
+              valueLabelDisplay="auto"
+            />
+
+            {/*<CategoryToggleGroup
+              categories={categories}
+              selectedCategories={currentHobby.categories}
+              onChange={(newCategories) => setCurrentHobby((prev) => ({ ...prev, categories: newCategories }))}
+            />*/}
+
+            <PlusMinusInputs
+              plusPoints={plusPoints}
+              minusPoints={minusPoints}
+              onChange={updatePoint}
+              onAdd={addPoint}
+              onRemove={removePoint}
+            />
+            <Button className='mt-5!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
           </div>
         </div>
 

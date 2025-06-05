@@ -1,6 +1,7 @@
 import * as React from "react";
 import axios from "axios";
 import type { Hobby } from "../interfaces/Hobby";
+import type { Point } from "../interfaces/Point";
 
 const API_URL = "http://localhost:8080";
 //const API_URL = process.env.NEXT_PUBLIC_API_URL;
