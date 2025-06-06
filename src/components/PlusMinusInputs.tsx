@@ -11,6 +11,8 @@ type Point = {
 interface Props {
     plusPoints: Point[];
     minusPoints: Point[];
+    pluspointRefs: React.RefObject<(HTMLInputElement | null)[]>;
+    minuspointRefs: React.RefObject<(HTMLInputElement | null)[]>;
     onChange: (type: "plus" | "minus", index: number, value: string) => void;
     onAdd: (type: "plus" | "minus") => void;
     onRemove: (type: "plus" | "minus", index: number) => void;
@@ -19,6 +21,8 @@ interface Props {
 export default function PlusMinusInputs({
     plusPoints,
     minusPoints,
+    pluspointRefs,
+    minuspointRefs,
     onChange,
     onAdd,
     onRemove }: Props) {
@@ -36,6 +40,7 @@ export default function PlusMinusInputs({
                         value={point.text}
                         className="text-white!"
                         color="primary"
+                        inputRef={(el) => (pluspointRefs.current[idx] = el)}
                         variant="standard"
                         sx={{ color: "white" }}
                         onChange={(e) => onChange("plus", idx, e.target.value)}
@@ -63,6 +68,7 @@ export default function PlusMinusInputs({
                     <TextField
                         className="text-white!"
                         color="primary"
+                        inputRef={(el) => (minuspointRefs.current[idx] = el)}
                         fullWidth
                         value={point.text}
                         onChange={(e) => onChange("minus", idx, e.target.value)}

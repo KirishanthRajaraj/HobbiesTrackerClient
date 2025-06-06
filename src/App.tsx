@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import './App.css'
 import { Alert, Autocomplete, Box, Button, IconButton, Modal, Slider, Snackbar, TextareaAutosize, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close';
@@ -50,10 +50,13 @@ function App() {
   const [toastMessage, setToastMessage] = useState('')
   const [toastType, setToastType] = useState<ToastType>(ToastType.ERROR)
   const [categories, setCategories] = useState<Category[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
   const [plusPoints, setPlusPoints] = useState<Point[]>([{ id: Date.now(), text: "", hobbyId: 0 }]);
   const [minusPoints, setMinusPoints] = useState<Point[]>([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
+  const minuspointRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const pluspointRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  {/* management of plus and minuspoints */}
+  {/* management of plus and minuspoints */ }
   const updatePoint = (type: "plus" | "minus", index: number, value: string) => {
     const setter = type === "plus" ? setPlusPoints : setMinusPoints;
     const state = type === "plus" ? plusPoints : minusPoints;
@@ -76,7 +79,14 @@ function App() {
     updated.splice(index, 1);
     setter(updated);
   };
-  {/* management of plus and minuspoints */}
+  {/* management of plus and minuspoints */ }
+
+  const onChangeCategories = (newCategories: Category[]) => {
+    console.log("clicked");
+    setCurrentHobby((prev) => ({ ...prev, categories: newCategories }));
+    console.log("newCategories", newCategories);
+    setSelectedCategories(newCategories);
+  }
 
   const closeHobbyEditModal = () => {
     setOpenHobbyEditModal(false)
@@ -106,6 +116,8 @@ function App() {
       minuspoints: [],
       //image: "",
     }));
+    setPlusPoints([{ id: Date.now(), text: "", hobbyId: 0 }]);
+    setMinusPoints([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
     setOpenHobbyEditModal(true);
   }
 
@@ -128,6 +140,35 @@ function App() {
   }
 
   const handleAddEditHobby = async () => {
+    /* handle plus minuspoints saving, if user doesn't change textfield values */
+    const minusPointsToUpdate: Point[] = minuspointRefs.current
+      .map((ref, index): Point | null =>
+        ref
+          ? {
+            id: index,
+            text: ref.value,
+            hobbyId: currentHobby.id,
+          }
+          : null
+      )
+      .filter((point): point is Point => point !== null);
+
+    const plusPointsToUpdate: Point[] = pluspointRefs.current
+      .map((ref, index): Point | null =>
+        ref
+          ? {
+            id: index,
+            text: ref.value,
+            hobbyId: currentHobby.id,
+          }
+          : null
+      )
+      .filter((point): point is Point => point !== null);
+
+    setPlusPoints(plusPointsToUpdate);
+    setMinusPoints(minusPointsToUpdate);
+    /* handle plus minuspoints saving, if user doesn't change textfield values */
+
     const newHobby: Hobby = {
       id: Date.now(),
       name: currentHobby.name,
@@ -135,8 +176,8 @@ function App() {
       interestLevel: currentHobby.interestLevel || 0,
       effortLevel: currentHobby.effortLevel || 0,
       categories: currentHobby.categories,
-      pluspoints: currentHobby.pluspoints,
-      minuspoints: currentHobby.minuspoints,
+      pluspoints: plusPointsToUpdate,
+      minuspoints: minusPointsToUpdate,
       //image: currentHobby.image,
     };
 
@@ -219,13 +260,18 @@ function App() {
       ...prev,
       pluspoints: plusPoints,
       minuspoints: minusPoints,
-    }));  
+    }));
   }, [plusPoints, minusPoints]);
 
 
   useEffect(() => {
     console.log("categories", categories);
   }, [categories]);
+
+  useEffect(() => {
+    console.log("selected categories", currentHobby.categories);
+  }, [currentHobby.categories]);
+
 
   const renderHobbyEditModal = () => {
     return (
@@ -278,15 +324,17 @@ function App() {
               valueLabelDisplay="auto"
             />
 
-            {/*<CategoryToggleGroup
+            <CategoryToggleGroup
               categories={categories}
               selectedCategories={currentHobby.categories}
-              onChange={(newCategories) => setCurrentHobby((prev) => ({ ...prev, categories: newCategories }))}
-            />*/}
+              onChange={(newCategories) => onChangeCategories(newCategories)}
+            />
 
             <PlusMinusInputs
               plusPoints={plusPoints}
               minusPoints={minusPoints}
+              pluspointRefs={pluspointRefs}
+              minuspointRefs={minuspointRefs}
               onChange={updatePoint}
               onAdd={addPoint}
               onRemove={removePoint}

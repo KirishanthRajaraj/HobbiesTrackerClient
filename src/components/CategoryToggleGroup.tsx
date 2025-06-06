@@ -17,17 +17,32 @@ export default function CategoryToggleGroup({
   onChange,
 }: Props) {
   const toggleCategory = (category: Category) => {
-    if (selectedCategories.some((c) => c.id === category.id)) {
-      onChange(selectedCategories.filter((c) => c.id !== category.id));
+    if (selectedCategories !== undefined) {
+      if (selectedCategories.some((c) => c.id === category.id)) {
+        onChange(selectedCategories.filter((c) => c.id !== category.id));
+      } else {
+        onChange([...selectedCategories, category]);
+      }
     } else {
-      onChange([...selectedCategories, category]);
+      const temp: Category[] = [];
+      temp.push(category);
+      onChange(temp);
     }
-  };
+
+  }
 
   return (
-    <div className="mt-6!" style={{ display: "flex", gap: 8}}>
+    <div className="mt-6" style={{ display: "flex", gap: 8 }}>
       {categories.map((category) => {
-        const selected = selectedCategories.some((c) => c.id === category.id);
+        let selected;
+        if (selectedCategories !== undefined && selectedCategories !== null) {
+          selected = selectedCategories.some((c) => c.id === category.id);
+        } else {
+          const temp: Category[] = [];
+          temp.push(category);
+          onChange(temp);
+        }
+
         return (
           <button
             key={category.id}
@@ -40,7 +55,7 @@ export default function CategoryToggleGroup({
               backgroundColor: "black",
               cursor: "pointer",
               color: "white",
-              boxShadow: selected ? "3px 3px 0px white": "none",
+              boxShadow: selected ? "3px 3px 0px white" : "none",
               transition: "box-shadow 0.2s ease, border 0.2s ease"
             }}
           >
