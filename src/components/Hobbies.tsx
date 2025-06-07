@@ -1,0 +1,405 @@
+import { useEffect, useRef, useState } from 'react'
+import '../App.css'
+import { Alert, Autocomplete, Box, Button, IconButton, Modal, Slider, Snackbar, TextareaAutosize, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
+import CloseIcon from '@mui/icons-material/Close';
+import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
+import * as HobbyClient from '../client/hobby.tsx';
+import * as CategoryClient from '../client/category.tsx';
+import type { Hobby } from '../interfaces/Hobby.tsx';
+import { Label } from '@mui/icons-material';
+import type { Category } from '../interfaces/Category.tsx';
+import CategoryToggleGroup from '../components/CategoryToggleGroup.tsx';
+import type { Point } from '../interfaces/Point.tsx';
+import PlusMinusInputs from '../components/PlusMinusInputs.tsx';
+import BottomNav from '../components/BottomNav.tsx';
+import HobbyRecommendation from '../components/HobbyRecommendation.tsx';
+import Home from '../App.tsx';
+
+
+function Hobbies() {
+    const [currentHobby, setCurrentHobby] = useState<Hobby>({
+        id: Date.now(),
+        name: "",
+        description: "",
+        interestLevel: 0,
+        effortLevel: 0,
+        categories: [],
+        pluspoints: [],
+        minuspoints: [],
+        //image: "",
+    })
+    const [editHobby, setEditHobby] = useState<Hobby>({
+        id: Date.now(),
+        name: "",
+        description: "",
+        interestLevel: 0,
+        effortLevel: 0,
+        categories: [],
+        pluspoints: [],
+        minuspoints: [],
+        //image: "",
+    })
+
+    // @ts-ignore
+    enum ToastType {
+        SUCCESS = "success",
+        ERROR = "error",
+    }
+
+    const [hobbies, setHobbies] = useState<Hobby[]>()
+    const [openHobbyEditModal, setOpenHobbyEditModal] = useState(false)
+    const [openToast, setOpenToast] = useState(false)
+    const [toastMessage, setToastMessage] = useState('')
+    const [toastType, setToastType] = useState<ToastType>(ToastType.ERROR)
+    const [categories, setCategories] = useState<Category[]>([])
+    const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+    const [plusPoints, setPlusPoints] = useState<Point[]>([{ id: Date.now(), text: "", hobbyId: 0 }]);
+    const [minusPoints, setMinusPoints] = useState<Point[]>([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
+    const minuspointRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const pluspointRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+
+    {/* management of plus and minuspoints */ }
+    const updatePoint = (type: "plus" | "minus", index: number, value: string) => {
+        const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+        const state = type === "plus" ? plusPoints : minusPoints;
+
+        const updated = [...state];
+        updated[index] = { ...updated[index], text: value, hobbyId: null };
+        setter(updated);
+    };
+
+    const addPoint = (type: "plus" | "minus") => {
+        const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+        setter((prev) => [...prev, { id: Date.now(), text: "", hobbyId: currentHobby.id }]);
+    };
+
+    const removePoint = (type: "plus" | "minus", index: number) => {
+        const setter = type === "plus" ? setPlusPoints : setMinusPoints;
+        const current = type === "plus" ? plusPoints : minusPoints;
+
+        const updated = [...current];
+        updated.splice(index, 1);
+        setter(updated);
+    };
+    {/* management of plus and minuspoints */ }
+
+    const onChangeCategories = (newCategories: Category[]) => {
+        console.log("clicked");
+        setCurrentHobby((prev) => ({ ...prev, categories: newCategories }));
+        console.log("newCategories", newCategories);
+        setSelectedCategories(newCategories);
+    }
+
+    const closeHobbyEditModal = () => {
+        setOpenHobbyEditModal(false)
+    }
+
+    const handleOpenHobbyAddModal = () => {
+        // reset edit hobby
+        setEditHobby({
+            id: 0,
+            name: "",
+            description: "",
+            interestLevel: 0,
+            effortLevel: 0,
+            categories: [],
+            pluspoints: [],
+            minuspoints: [],
+            //image: "",
+        });
+        setCurrentHobby((prev) => ({
+            id: prev.id,
+            name: "",
+            description: "",
+            interestLevel: 0,
+            effortLevel: 0,
+            categories: [],
+            pluspoints: [],
+            minuspoints: [],
+            //image: "",
+        }));
+        setPlusPoints([{ id: Date.now(), text: "", hobbyId: 0 }]);
+        setMinusPoints([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
+        setOpenHobbyEditModal(true);
+    }
+
+    const handleCloseToast = () => {
+        setOpenToast(false)
+    }
+
+    const handleEditHobby = (editHobby: Hobby) => {
+        console.log("editHobby", editHobby);
+        setCurrentHobby(editHobby);
+        setPlusPoints(editHobby.pluspoints || [{ id: Date.now(), text: "", hobbyId: editHobby.id }]);
+        setMinusPoints(editHobby.minuspoints || [{ id: Date.now() + 1, text: "", hobbyId: editHobby.id }]);
+        setEditHobby(editHobby);
+        setOpenHobbyEditModal(true);
+    }
+
+    const handleDeleteHobby = async (toDelHobby: Hobby) => {
+        await deleteHobby(toDelHobby.id);
+        getAllHobbies();
+    }
+
+    const handleAddEditHobby = async () => {
+        /* handle plus minuspoints saving, if user doesn't change textfield values */
+        const minusPointsToUpdate: Point[] = minuspointRefs.current
+            .map((ref, index): Point | null =>
+                ref
+                    ? {
+                        id: index,
+                        text: ref.value,
+                        hobbyId: currentHobby.id,
+                    }
+                    : null
+            )
+            .filter((point): point is Point => point !== null);
+
+        const plusPointsToUpdate: Point[] = pluspointRefs.current
+            .map((ref, index): Point | null =>
+                ref
+                    ? {
+                        id: index,
+                        text: ref.value,
+                        hobbyId: currentHobby.id,
+                    }
+                    : null
+            )
+            .filter((point): point is Point => point !== null);
+
+        setPlusPoints(plusPointsToUpdate);
+        setMinusPoints(minusPointsToUpdate);
+        /* handle plus minuspoints saving, if user doesn't change textfield values */
+
+        const newHobby: Hobby = {
+            id: Date.now(),
+            name: currentHobby.name,
+            description: currentHobby.description,
+            interestLevel: currentHobby.interestLevel || 0,
+            effortLevel: currentHobby.effortLevel || 0,
+            categories: currentHobby.categories,
+            pluspoints: plusPointsToUpdate,
+            minuspoints: minusPointsToUpdate,
+            //image: currentHobby.image,
+        };
+
+        if (editHobby.id === currentHobby.id) {
+            try {
+                // update hobby
+                await putHobby(currentHobby, currentHobby.id);
+                setHobbies((prev) =>
+                    prev?.map((h) =>
+                        h.id === editHobby.id ? { ...h, ...newHobby } : h
+                    ) || [],
+                );
+            } catch (err: any) {
+                setToastMessage("Error updating hobby: " + err.message);
+                setToastType(ToastType.ERROR);
+                setOpenToast(true);
+            }
+        } else {
+            try {
+                // add hobby
+                await postHobby(currentHobby);
+                setHobbies((prev) =>
+                    [...(prev || []), newHobby]
+                );
+            } catch (err: any) {
+                setToastMessage("Error creating hobby: " + err.message);
+                setToastType(ToastType.ERROR);
+                setOpenToast(true);
+            }
+        }
+
+        getAllHobbies();
+        setOpenHobbyEditModal(false);
+    };
+
+    const getAllHobbies = async () => {
+        try {
+            HobbyClient.getAllHobbies().then((res) => {
+                setHobbies(res.data);
+                console.log("hobbies", res.data);
+            }).catch((err) => {
+                console.error("Error fetching hobbies:", err);
+            });
+        } catch (error) {
+            console.error("Error in getAllHobbies:", error);
+        }
+    }
+
+    const getAllCategories = async () => {
+        try {
+            CategoryClient.getAllCategories().then((res) => {
+                setCategories(res.data);
+            }).catch((err) => {
+                console.error("Error fetching hobbies:", err);
+            });
+        } catch (error) {
+            console.error("Error in getAllHobbies:", error);
+        }
+    }
+
+    const postHobby = async (hobby: Hobby) => {
+        await HobbyClient.postHobby(hobby);
+    }
+
+    const putHobby = async (hobby: Hobby, id: number) => {
+        await HobbyClient.editHobby(id, hobby);
+    }
+
+    const deleteHobby = async (id: number) => {
+        await HobbyClient.deleteHobby(id);
+    }
+
+    useEffect(() => {
+        getAllHobbies();
+        getAllCategories();
+    }, []);
+
+    useEffect(() => {
+        setCurrentHobby((prev) => ({
+            ...prev,
+            pluspoints: plusPoints,
+            minuspoints: minusPoints,
+        }));
+    }, [plusPoints, minusPoints]);
+
+
+    useEffect(() => {
+        console.log("categories", categories);
+    }, [categories]);
+
+    useEffect(() => {
+        console.log("selected categories", currentHobby.categories);
+    }, [currentHobby.categories]);
+
+
+    const renderHobbyEditModal = () => {
+        return (
+            <Modal className='flex justify-center align-center' open={openHobbyEditModal} onClose={closeHobbyEditModal} component="div">
+                <div className='w-auto h-auto flex justify-center align-center flex-col rounded-3xl overflow-x-auto my-6'>
+                    <div className='bg-neutral-950 p-12 rounded-xl flex flex-col scroll-auto'>
+                        <IconButton
+                            onClick={closeHobbyEditModal}
+                            className="absolute! top-2! right-2! text-white"
+                        >
+                            <CloseIcon />
+                        </IconButton>
+
+                        <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-gray-400'>
+                            {editHobby?.id === currentHobby.id ? "Edit" : "Create"} Hobby
+                        </Typography>
+
+                        <TextField label="Hobbyname" className='mb-4!' variant="standard" color='primary' value={currentHobby.name} onChange={(e) => setCurrentHobby((prev) => ({ ...prev, name: e.target.value }))}></TextField>
+
+                        <TextareaAutosize className='text-white border-gray-500 border-[1px] rounded-sm mb-2 p-1' value={currentHobby.description} color='primary' onChange={(e) => setCurrentHobby((prev) => ({ ...prev, description: e.target.value }))} minRows={3} placeholder="Description">
+                        </TextareaAutosize>
+
+                        <Typography gutterBottom>
+                            Interest Level
+                        </Typography>
+                        <Slider
+                            aria-label="Small steps"
+                            defaultValue={0}
+                            value={currentHobby.interestLevel}
+                            onChange={(e, newValue) => setCurrentHobby((prev) => ({ ...prev, interestLevel: newValue as number }))}
+                            step={1}
+                            marks
+                            min={0}
+                            max={10}
+                            valueLabelDisplay="auto"
+                        />
+
+                        <Typography gutterBottom>
+                            Effort Level
+                        </Typography>
+                        <Slider
+                            aria-label="Small steps"
+                            defaultValue={0}
+                            value={currentHobby.effortLevel}
+                            onChange={(e, newValue) => setCurrentHobby((prev) => ({ ...prev, effortLevel: newValue as number }))}
+                            step={1}
+                            marks
+                            min={0}
+                            max={10}
+                            valueLabelDisplay="auto"
+                        />
+
+                        <CategoryToggleGroup
+                            categories={categories}
+                            selectedCategories={currentHobby.categories}
+                            onChange={(newCategories) => onChangeCategories(newCategories)}
+                        />
+
+                        <PlusMinusInputs
+                            plusPoints={plusPoints}
+                            minusPoints={minusPoints}
+                            pluspointRefs={pluspointRefs}
+                            minuspointRefs={minuspointRefs}
+                            onChange={updatePoint}
+                            onAdd={addPoint}
+                            onRemove={removePoint}
+                        />
+                        <Button className='mt-5!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
+                    </div>
+                </div>
+
+            </Modal>
+        )
+    }
+
+    const renderToast = () => {
+        return (
+            <Snackbar open={openToast} autoHideDuration={3000} onClose={handleCloseToast}>
+                <Alert onClose={handleCloseToast} severity={toastType} sx={{ width: '100%' }}>
+                    {toastMessage}
+                </Alert>
+            </Snackbar>
+        )
+    }
+
+    return (
+        <>
+
+            <div className='max-w-xl mx-auto p-4'>
+                <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-gray-400'>
+                    Hobbies
+                </Typography>
+
+                <div className="flex flex-col gap-2">
+
+                    {hobbies?.map((hobby) => (
+                        <div
+                            key={hobby.id}
+                            className="flex items-center justify-between w-full px-4 py-2 bg-white hover:bg-gray-100 rounded-xl shadow transition-all"
+                        >
+                            <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-black'>
+                                {hobby.name}
+                            </Typography>
+
+                            <IconButton color="secondary" onClick={() => handleEditHobby(hobby)}>
+                                <EditIcon />
+                            </IconButton>
+
+                            <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
+                                <DeleteIcon />
+                            </IconButton>
+                        </div>
+
+                    ))}
+                </div>
+
+                <Button variant='outlined' color='secondary' className='bg-orange-500' onClick={handleOpenHobbyAddModal}>Create</Button>
+                {renderHobbyEditModal()}
+
+                {renderToast()}
+
+            </div>
+        </>
+    )
+}
+
+export default Hobbies
