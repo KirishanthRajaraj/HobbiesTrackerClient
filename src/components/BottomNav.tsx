@@ -20,10 +20,9 @@ function BottomNav() {
             left: 0,
             right: 0,
             zIndex: 1000,
-            backgroundColor: 'background.paper',
-            borderTop: '1px solid #ddd',
+            backgroundColor: '#000'
         }}>
-            <BottomNavigation
+            <BottomNavigation sx={{ backgroundColor: '#000' }}
                 showLabels
                 value={getTabValue(location.pathname)}
                 onChange={(event, newValue) => {
@@ -31,8 +30,27 @@ function BottomNav() {
                     else if (newValue === 1) navigate('/recommendation');
                 }}
             >
-                <BottomNavigationAction label="Home" icon={<HomeIcon />} />
-                <BottomNavigationAction label="Hobby" icon={<FavoriteIcon />} />
+                <BottomNavigationAction label="Home" icon={<HomeIcon />}
+                    sx={{
+                        '&.Mui-selected': {
+                            backgroundColor: '#333',
+                            color: '#ffcc00',
+                        },
+                        color: '#888',
+                        borderRadius: 2,
+                        padding: '6px 12px',
+                    }}
+                />
+                <BottomNavigationAction label="Hobby" icon={<FavoriteIcon />}
+                    sx={{
+                        '&.Mui-selected': {
+                            backgroundColor: '#333',
+                            color: '#ffcc00',
+                        },
+                        color: '#888',
+                        borderRadius: 2,
+                        padding: '6px 12px',
+                    }} />
             </BottomNavigation>
         </Box>
     );

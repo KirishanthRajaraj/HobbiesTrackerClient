@@ -9,6 +9,7 @@ function App() {
 
   return (
     <div className="App">
+      <div className="App">
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Home />} />
@@ -17,6 +18,7 @@ function App() {
         <BottomNav />
 
       </BrowserRouter>
+      </div>
     </div>
   )
 

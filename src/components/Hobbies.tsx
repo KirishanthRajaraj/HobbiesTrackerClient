@@ -289,7 +289,7 @@ function Hobbies() {
                             <CloseIcon />
                         </IconButton>
 
-                        <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-gray-400'>
+                        <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-gray-400 focus:outline-[#ffcc00]!'>
                             {editHobby?.id === currentHobby.id ? "Edit" : "Create"} Hobby
                         </Typography>
 
@@ -343,7 +343,7 @@ function Hobbies() {
                             onAdd={addPoint}
                             onRemove={removePoint}
                         />
-                        <Button className='mt-5!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
+                        <Button className='mt-5 bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-4 py-2 rounded-xl shadow-md transition duration-200 hover:border-[#ffcc00]!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
                     </div>
                 </div>
 
@@ -365,7 +365,7 @@ function Hobbies() {
         <>
 
             <div className='max-w-xl mx-auto p-4'>
-                <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-gray-400'>
+                <Typography variant="h3" component="h2" color="seondary" className='mb-6! text-gray-400'>
                     Hobbies
                 </Typography>
 
@@ -374,25 +374,26 @@ function Hobbies() {
                     {hobbies?.map((hobby) => (
                         <div
                             key={hobby.id}
-                            className="flex items-center justify-between w-full px-4 py-2 bg-white hover:bg-gray-100 rounded-xl shadow transition-all"
-                        >
-                            <Typography variant="h6" component="h2" color="seondary" className='mb-2! text-black'>
-                                {hobby.name}
-                            </Typography>
+                            className="hover:cursor-pointer w-full px-8 py-4 bg-[#ffcc00] hover:opacity-75 shadow-[-12px_12px_0_0_#e6b800] border-[#000] border-b-4 border-l-4 mb-6 hover:shadow-none transition-all duration-[250ms] hover:translate-x-[4px] hover:translate-y-[4px]"
+                            style={{ transform: 'skew(-20deg)' }}
+                            onClick={() => handleEditHobby(hobby)}>
+                            <div
+                                className='flex items-center justify-between'
+                                style={{ transform: 'skew(20deg)' }}
+                            >
+                                <Typography variant="h6" component="h2" color="seondary" className='text-black font-black!'>
+                                    {hobby.name}
+                                </Typography>
 
-                            <IconButton color="secondary" onClick={() => handleEditHobby(hobby)}>
-                                <EditIcon />
-                            </IconButton>
-
-                            <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
-                                <DeleteIcon />
-                            </IconButton>
+                                <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
+                                    <DeleteIcon />
+                                </IconButton>
+                            </div>
                         </div>
-
                     ))}
                 </div>
 
-                <Button variant='outlined' color='secondary' className='bg-orange-500' onClick={handleOpenHobbyAddModal}>Create</Button>
+                <Button variant='outlined' color='secondary' className='bg-orange-500 hover:border-[#ffcc00]!' onClick={handleOpenHobbyAddModal}>Create</Button>
                 {renderHobbyEditModal()}
 
                 {renderToast()}
