@@ -30,7 +30,7 @@ function BottomNav() {
                     else if (newValue === 1) navigate('/recommendation');
                 }}
             >
-                <BottomNavigationAction label="Home" icon={<HomeIcon />}
+                <BottomNavigationAction className=' focus:outline-none!' label="Home" icon={<HomeIcon />}
                     sx={{
                         '&.Mui-selected': {
                             backgroundColor: '#333',
@@ -41,7 +41,7 @@ function BottomNav() {
                         padding: '6px 12px',
                     }}
                 />
-                <BottomNavigationAction label="Hobby" icon={<FavoriteIcon />}
+                <BottomNavigationAction className=' focus:outline-none!' label="Hobby" icon={<FavoriteIcon />}
                     sx={{
                         '&.Mui-selected': {
                             backgroundColor: '#333',

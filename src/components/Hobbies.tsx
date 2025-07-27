@@ -15,6 +15,8 @@ import PlusMinusInputs from '../components/PlusMinusInputs.tsx';
 import BottomNav from '../components/BottomNav.tsx';
 import HobbyRecommendation from '../components/HobbyRecommendation.tsx';
 import Home from '../App.tsx';
+import HighlightCalendar from './HightlightCalender.tsx';
+import WeekCalendar from './weekCalender.tsx';
 
 
 function Hobbies() {
@@ -374,20 +376,26 @@ function Hobbies() {
                     {hobbies?.map((hobby) => (
                         <div
                             key={hobby.id}
-                            className="hover:cursor-pointer w-full px-8 py-4 bg-[#ffcc00] hover:opacity-75 shadow-[-12px_12px_0_0_#e6b800] border-[#000] border-b-4 border-l-4 mb-6 hover:shadow-none transition-all duration-[250ms] hover:translate-x-[4px] hover:translate-y-[4px]"
+                            className="hover:cursor-pointer w-full px-8 py-4 bg-[#ffcc00] shadow-[-12px_12px_0_0_#e6b800] border-[#000] border-b-4 border-l-4 mb-6 hover:shadow-none transition-all duration-[250ms] hover:translate-x-[4px] hover:translate-y-[4px]"
                             style={{ transform: 'skew(-20deg)' }}
                             onClick={() => handleEditHobby(hobby)}>
                             <div
-                                className='flex items-center justify-between'
+                                className='flex flex-col'
                                 style={{ transform: 'skew(20deg)' }}
                             >
-                                <Typography variant="h6" component="h2" color="seondary" className='text-black font-black!'>
-                                    {hobby.name}
-                                </Typography>
+                                <div className='row-one flex items-center justify-between'>
+                                    <Typography variant="h6" component="h2" color="seondary" className='text-black font-black!'>
+                                        {hobby.name}
+                                    </Typography>
 
-                                <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
-                                    <DeleteIcon />
-                                </IconButton>
+                                    <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
+                                        <DeleteIcon />
+                                    </IconButton>
+                                </div>
+
+                                <div className='row-two'>
+                                    <WeekCalendar hobbyId={hobby.id}></WeekCalendar>
+                                </div>
                             </div>
                         </div>
                     ))}

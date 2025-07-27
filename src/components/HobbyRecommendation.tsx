@@ -83,7 +83,7 @@ function HobbyRecommendation() {
     return (
         <div style={{ padding: '20px', textAlign: 'center', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'center', gap: '20px' }}>
             <Typography>Ask AI to help you pick:</Typography>
-            <TextareaAutosize className="border-2 rounded-none border-white focus:border-white! focus:outline-white w-96" aria-label="minimum height"
+            <TextareaAutosize className="border-2 rounded-none border-white focus:border-white! w-96" aria-label="minimum height"
   minRows={5} onChange={(e) => setPrompt(e.target.value)}
                ></TextareaAutosize>
             <Button className="bg-black! focus:outline-[#ffcc00]!" variant='outlined' onClick={handleSendPrompt}>Send prompt</Button>
