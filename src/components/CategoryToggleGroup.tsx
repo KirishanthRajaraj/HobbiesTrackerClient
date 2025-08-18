@@ -1,52 +1,54 @@
-import React, { useState } from "react";
-
-interface Category {
-  id: number;
-  name: string;
+interface BaseProps<T> {
+  items: T[];
+  getKey: (item: T) => string | number;
+  getLabel: (item: T) => string;
 }
 
-interface Props {
-  categories: Category[];
-  selectedCategories: Category[];
-  onChange: (selected: Category[]) => void;
+interface MultiProps<T> extends BaseProps<T> {
+  multiple: true;
+  selected: T[];
+  onChange: (selected: T[]) => void;
 }
 
-export default function CategoryToggleGroup({
-  categories,
-  selectedCategories,
-  onChange,
-}: Props) {
-  const toggleCategory = (category: Category) => {
-    if (selectedCategories !== undefined) {
-      if (selectedCategories.some((c) => c.id === category.id)) {
-        onChange(selectedCategories.filter((c) => c.id !== category.id));
+interface SingleProps<T> extends BaseProps<T> {
+  multiple?: false;
+  selected: T | null;
+  onChange: (selected: T | null) => void;
+}
+
+export type ToggleGroupProps<T> = MultiProps<T> | SingleProps<T>;
+
+export default function ToggleGroup<T>(props: ToggleGroupProps<T>) {
+  const { items, getKey, getLabel } = props;
+
+  const handleToggle = (item: T) => {
+    if (props.multiple) {
+      const selectedArray = props.selected;
+      if (selectedArray.some((s) => getKey(s) === getKey(item))) {
+        props.onChange(selectedArray.filter((s) => getKey(s) !== getKey(item)));
       } else {
-        onChange([...selectedCategories, category]);
+        props.onChange([...selectedArray, item]);
       }
     } else {
-      const temp: Category[] = [];
-      temp.push(category);
-      onChange(temp);
+      props.onChange(item); // single-choice
     }
+  };
 
-  }
+  const isSelected = (item: T) => {
+    if (props.multiple) {
+      return props.selected.some((s) => getKey(s) === getKey(item));
+    }
+    return props.selected != null && getKey(props.selected) === getKey(item);
+  };
 
   return (
     <div className="mt-6" style={{ display: "flex", gap: 8 }}>
-      {categories.map((category) => {
-        let selected;
-        if (selectedCategories !== undefined && selectedCategories !== null) {
-          selected = selectedCategories.some((c) => c.id === category.id);
-        } else {
-          const temp: Category[] = [];
-          temp.push(category);
-          onChange(temp);
-        }
-
+      {items.map((item) => {
+        const selectedState = isSelected(item);
         return (
           <button
-            key={category.id}
-            onClick={() => toggleCategory(category)}
+            key={getKey(item)}
+            onClick={() => handleToggle(item)}
             style={{
               padding: "6px 12px",
               margin: "0 6px 5px 0",
@@ -55,11 +57,11 @@ export default function CategoryToggleGroup({
               backgroundColor: "black",
               cursor: "pointer",
               color: "white",
-              boxShadow: selected ? "3px 3px 0px white" : "none",
-              transition: "box-shadow 0.2s ease, border 0.2s ease"
+              boxShadow: selectedState ? "3px 3px 0px white" : "none",
+              transition: "box-shadow 0.2s ease, border 0.2s ease",
             }}
           >
-            {category.name}
+            {getLabel(item)}
           </button>
         );
       })}

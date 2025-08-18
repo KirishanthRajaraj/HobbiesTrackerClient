@@ -1,0 +1,1 @@
+export type PointsInterval = "DAILY" | "WEEKLY" | "CUSTOM";

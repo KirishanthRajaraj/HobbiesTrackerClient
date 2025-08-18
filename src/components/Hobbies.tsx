@@ -17,6 +17,7 @@ import HobbyRecommendation from '../components/HobbyRecommendation.tsx';
 import Home from '../App.tsx';
 import HighlightCalendar from './HightlightCalender.tsx';
 import WeekCalendar from './weekCalender.tsx';
+import type { PointsInterval } from '../interfaces/PointsInterval.tsx';
 
 
 function Hobbies() {
@@ -29,6 +30,11 @@ function Hobbies() {
         categories: [],
         pluspoints: [],
         minuspoints: [],
+        pointIntervalType: "DAILY",
+        intervalPointsDaysOfWeek: [],
+        intervalDaysOfMonth: [],
+        pointsCurrent: 0,
+        pointsValued: 0,
         //image: "",
     })
     const [editHobby, setEditHobby] = useState<Hobby>({
@@ -40,6 +46,11 @@ function Hobbies() {
         categories: [],
         pluspoints: [],
         minuspoints: [],
+        pointIntervalType: "DAILY",
+        intervalPointsDaysOfWeek: [],
+        intervalDaysOfMonth: [],
+        pointsCurrent: 0,
+        pointsValued: 0,
         //image: "",
     })
 
@@ -94,6 +105,10 @@ function Hobbies() {
         setSelectedCategories(newCategories);
     }
 
+    const onChangeIntervalPointType = (intervalType: PointsInterval) => {
+        setCurrentHobby((prev) => ({ ...prev, pointIntervalType: intervalType }));
+    }
+
     const closeHobbyEditModal = () => {
         setOpenHobbyEditModal(false)
     }
@@ -109,7 +124,11 @@ function Hobbies() {
             categories: [],
             pluspoints: [],
             minuspoints: [],
-            //image: "",
+            pointIntervalType: "DAILY",
+            intervalPointsDaysOfWeek: [],
+            intervalDaysOfMonth: [],
+            pointsCurrent: 0,
+            pointsValued: 0,
         });
         setCurrentHobby((prev) => ({
             id: prev.id,
@@ -120,7 +139,11 @@ function Hobbies() {
             categories: [],
             pluspoints: [],
             minuspoints: [],
-            //image: "",
+            pointIntervalType: "DAILY",
+            intervalPointsDaysOfWeek: [],
+            intervalDaysOfMonth: [],
+            pointsCurrent: 0,
+            pointsValued: 0,
         }));
         setPlusPoints([{ id: Date.now(), text: "", hobbyId: 0 }]);
         setMinusPoints([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
@@ -184,6 +207,11 @@ function Hobbies() {
             categories: currentHobby.categories,
             pluspoints: plusPointsToUpdate,
             minuspoints: minusPointsToUpdate,
+            pointIntervalType: "DAILY",
+            intervalPointsDaysOfWeek: [],
+            intervalDaysOfMonth: [],
+            pointsCurrent: 0,
+            pointsValued: 0,
             //image: currentHobby.image,
         };
 
@@ -331,9 +359,12 @@ function Hobbies() {
                         />
 
                         <CategoryToggleGroup
-                            categories={categories}
-                            selectedCategories={currentHobby.categories}
+                            items={categories}
+                            selected={currentHobby.categories}
                             onChange={(newCategories) => onChangeCategories(newCategories)}
+                            getKey={(c) => c.id}
+                            getLabel={(c) => c.name}
+                            multiple={true}
                         />
 
                         <PlusMinusInputs
@@ -345,6 +376,25 @@ function Hobbies() {
                             onAdd={addPoint}
                             onRemove={removePoint}
                         />
+
+
+                        <Typography className='inline-block! border-b-2 border-white mb-2' gutterBottom>
+                            Points
+                        </Typography>
+
+
+                        {/* Hobby Point Fields */}
+                        <TextField label="Valued points" type='number' className='mb-4!' variant="standard" color='primary' value={currentHobby.pointsValued} onChange={(e) => setCurrentHobby((prev) => ({ ...prev, pointsValued: e.target.value as unknown as number }))}></TextField>
+
+                        <CategoryToggleGroup
+                            items={["DAILY", "WEEKLY", "CUSTOM"]}
+                            selected={currentHobby.pointIntervalType}
+                            onChange={(newInterval) => onChangeIntervalPointType(newInterval as PointsInterval)}
+                            getKey={(c) => c}
+                            getLabel={(c) => c}
+                            multiple={false}
+                        />
+
                         <Button className='mt-5 bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-4 py-2 rounded-xl shadow-md transition duration-200 hover:border-[#ffcc00]!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
                     </div>
                 </div>
@@ -368,7 +418,7 @@ function Hobbies() {
 
             <div className='max-w-xl mx-auto p-4'>
                 <Typography variant="h3" component="h2" color="seondary" className='mb-6! text-gray-400'>
-                    Hobbies
+                    Habits & Tasks
                 </Typography>
 
                 <div className="flex flex-col gap-2">
@@ -376,7 +426,7 @@ function Hobbies() {
                     {hobbies?.map((hobby) => (
                         <div
                             key={hobby.id}
-                            className="hover:cursor-pointer w-full px-8 py-4 bg-[#ffcc00] shadow-[-12px_12px_0_0_#e6b800] border-[#000] border-b-4 border-l-4 mb-6 hover:shadow-none transition-all duration-[250ms] hover:translate-x-[4px] hover:translate-y-[4px]"
+                            className="hover:cursor-pointer mb-6 w-full px-8 py-4 bg-[#ffcc00] shadow-[-12px_12px_0_0_#e6b800] border-[#000] border-b-4 border-l-4 hover:shadow-none transition-all duration-[250ms] hover:translate-x-[4px] hover:translate-y-[4px]"
                             style={{ transform: 'skew(-20deg)' }}
                             onClick={() => handleEditHobby(hobby)}>
                             <div
@@ -388,7 +438,7 @@ function Hobbies() {
                                         {hobby.name}
                                     </Typography>
 
-                                    <IconButton color="secondary" onClick={() => handleDeleteHobby(hobby)}>
+                                    <IconButton className='bg-black!' color="secondary" onClick={() => handleDeleteHobby(hobby)}>
                                         <DeleteIcon />
                                     </IconButton>
                                 </div>
@@ -401,7 +451,7 @@ function Hobbies() {
                     ))}
                 </div>
 
-                <Button variant='outlined' color='secondary' className='bg-orange-500 hover:border-[#ffcc00]!' onClick={handleOpenHobbyAddModal}>Create</Button>
+                <Button variant='outlined' color='secondary' className='bg-orange-500 hover:border-[#ffcc00]! mb-16!' onClick={handleOpenHobbyAddModal}>Create</Button>
                 {renderHobbyEditModal()}
 
                 {renderToast()}
