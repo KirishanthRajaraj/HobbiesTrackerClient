@@ -67,6 +67,7 @@ function Hobbies() {
     const [toastType, setToastType] = useState<ToastType>(ToastType.ERROR)
     const [categories, setCategories] = useState<Category[]>([])
     const [selectedCategories, setSelectedCategories] = useState<Category[]>([])
+    const [selectedInterval, setSelectedInterval] = useState<PointsInterval>()
     const [plusPoints, setPlusPoints] = useState<Point[]>([{ id: Date.now(), text: "", hobbyId: 0 }]);
     const [minusPoints, setMinusPoints] = useState<Point[]>([{ id: Date.now() + 1, text: "", hobbyId: 0 }]);
     const minuspointRefs = useRef<(HTMLInputElement | null)[]>([]);
@@ -107,6 +108,7 @@ function Hobbies() {
 
     const onChangeIntervalPointType = (intervalType: PointsInterval) => {
         setCurrentHobby((prev) => ({ ...prev, pointIntervalType: intervalType }));
+        setSelectedInterval(intervalType);
     }
 
     const closeHobbyEditModal = () => {
@@ -210,8 +212,8 @@ function Hobbies() {
             pointIntervalType: "DAILY",
             intervalPointsDaysOfWeek: [],
             intervalDaysOfMonth: [],
-            pointsCurrent: 0,
-            pointsValued: 0,
+            pointsCurrent: currentHobby.pointsCurrent || 0,
+            pointsValued: currentHobby.pointsValued || 0,
             //image: currentHobby.image,
         };
 
@@ -303,8 +305,8 @@ function Hobbies() {
     }, [categories]);
 
     useEffect(() => {
-        console.log("selected categories", currentHobby.categories);
-    }, [currentHobby.categories]);
+        console.log("current hobbyy", currentHobby);
+    }, [currentHobby]);
 
 
     const renderHobbyEditModal = () => {
@@ -384,7 +386,7 @@ function Hobbies() {
 
 
                         {/* Hobby Point Fields */}
-                        <TextField label="Valued points" type='number' className='mb-4!' variant="standard" color='primary' value={currentHobby.pointsValued} onChange={(e) => setCurrentHobby((prev) => ({ ...prev, pointsValued: e.target.value as unknown as number }))}></TextField>
+                        <TextField label="Valued points" type='number' className='mb-4!' variant="standard" color='primary' value={currentHobby.pointsValued ?? 0} onChange={(e) => setCurrentHobby((prev) => ({ ...prev, pointsValued: e.target.value as unknown as number }))}></TextField>
 
                         <CategoryToggleGroup
                             items={["DAILY", "WEEKLY", "CUSTOM"]}
@@ -395,7 +397,16 @@ function Hobbies() {
                             multiple={false}
                         />
 
+                        {selectedInterval === "WEEKLY" && (
+                            <WeekCalendar hobbyId={currentHobby.id} />
+                        )}
+
+                        {selectedInterval === "CUSTOM" && (
+                            <HighlightCalendar />
+                        )}
+
                         <Button className='mt-5 bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-4 py-2 rounded-xl shadow-md transition duration-200 hover:border-[#ffcc00]!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
+
                     </div>
                 </div>
 
@@ -430,23 +441,38 @@ function Hobbies() {
                             style={{ transform: 'skew(-20deg)' }}
                             onClick={() => handleEditHobby(hobby)}>
                             <div
-                                className='flex flex-col'
+                                className='flex p-2 justify-between items-stretch'
                                 style={{ transform: 'skew(20deg)' }}
                             >
-                                <div className='row-one flex items-center justify-between'>
+
+
+                                <div className='row-one gap-2 flex flex-col items-start justify-between p-2'>
                                     <Typography variant="h6" component="h2" color="seondary" className='text-black font-black!'>
                                         {hobby.name}
                                     </Typography>
 
-                                    <IconButton className='bg-black!' color="secondary" onClick={() => handleDeleteHobby(hobby)}>
-                                        <DeleteIcon />
-                                    </IconButton>
+                                    <div className='row-two'>
+                                        <WeekCalendar hobbyId={hobby.id}></WeekCalendar>
+                                    </div>
                                 </div>
 
-                                <div className='row-two'>
-                                    <WeekCalendar hobbyId={hobby.id}></WeekCalendar>
+                                <div className="flex flex-col items-end justify-between">
+
+
+                                    <span color="secondary" className='text-black font-bold! text-5xl'>
+                                        {hobby.pointsValued &&
+                                            hobby.pointsCurrent
+                                        }
+
+                                    </span>
+
+                                    <IconButton color="primary" onClick={() => handleDeleteHobby(hobby)}>
+                                        <DeleteIcon sx={{ color: "black" }} />
+                                    </IconButton>
                                 </div>
                             </div>
+
+
                         </div>
                     ))}
                 </div>

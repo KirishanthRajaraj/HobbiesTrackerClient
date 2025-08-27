@@ -35,3 +35,11 @@ export const removeHobbyDate = async (hobbyDates: HobbyDates) => {
 export const getAllHobbyDates = async () => {
     return axios.get(`${API_URL}/getAllHobbyDates/`);
 }
+
+export const updateHobbyPoints = async (hobbyId: number) => {
+    return axios.put(`${API_URL}/updateHobbyPoints/${hobbyId}`);
+}
+
+export const removeHobbyPoints = async (hobbyId: number) => {
+    return axios.delete(`${API_URL}/removeHobbyPoints/${hobbyId}`);
+}
