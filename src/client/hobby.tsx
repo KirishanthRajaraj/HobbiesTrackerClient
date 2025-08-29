@@ -16,30 +16,33 @@ export const postHobby = async (hobby: Hobby) => {
     return axios.post(`${API_URL}/addHobby`, hobby);
 }
 
-export const editHobby = async (id:number, hobby: Hobby) => {
+export const editHobby = async (id: number, hobby: Hobby) => {
     return axios.put(`${API_URL}/editHobby/${id}`, hobby);
 }
 
-export const deleteHobby = async (id:number) => {
+export const deleteHobby = async (id: number) => {
     return axios.delete(`${API_URL}/deleteHobby/${id}`);
 }
 
-export const updateHobbyDate = async (hobbyDates: HobbyDates) => {
-    return axios.put(`${API_URL}/updateHobbyDate/`, hobbyDates);
-}
+export const updateHobbyDate = async (hobbyDate: HobbyDates): Promise<HobbyDates> => {
+    const response = await axios.put(`${API_URL}/updateHobbyDate/`, hobbyDate);
+    return response.data;
+};
 
 export const removeHobbyDate = async (hobbyDates: HobbyDates) => {
-    return axios.put(`${API_URL}/removeHobbyDate/`, hobbyDates);
+    return axios.delete(`${API_URL}/removeHobbyDate/`, { data: hobbyDates });
 }
 
 export const getAllHobbyDates = async () => {
     return axios.get(`${API_URL}/getAllHobbyDates/`);
 }
 
-export const updateHobbyPoints = async (hobbyId: number) => {
-    return axios.put(`${API_URL}/updateHobbyPoints/${hobbyId}`);
+export const updateHobbyPoints = async (hobbyId: number): Promise<number> => {
+    const response = await axios.put(`${API_URL}/updateHobbyPoints/${hobbyId}`);
+    return response.data;
 }
 
 export const removeHobbyPoints = async (hobbyId: number) => {
-    return axios.delete(`${API_URL}/removeHobbyPoints/${hobbyId}`);
+    const response = await axios.delete(`${API_URL}/removeHobbyPoints/${hobbyId}`);
+    return response.data;
 }

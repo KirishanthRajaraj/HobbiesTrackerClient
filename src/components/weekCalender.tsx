@@ -4,18 +4,19 @@ import { Typography, Box } from '@mui/material';
 import * as HobbyClient from '../client/hobby.tsx';
 import type { HobbyDates } from '../interfaces/HobbyDates.tsx';
 import type { PointsInterval } from '../interfaces/PointsInterval.tsx';
+import type { Hobby } from '../interfaces/Hobby.tsx';
 
 interface Props {
   hobbyId: number;
   isInterval: boolean;
+  setHobbies: React.Dispatch<React.SetStateAction<Hobby[]>>;
 }
 
-export default function WeekCalendar({ hobbyId, isInterval }: Props) {
+export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props) {
   const today = dayjs();
   const startOfWeek = today.startOf('week'); // Sunday
   const [hobbyDates, setHobbyDates] = useState<HobbyDates[]>([]);
   const [intervalDates, setIntervalDates] = useState<number[]>([]);
-
 
   const weekDays = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
 
@@ -38,6 +39,7 @@ export default function WeekCalendar({ hobbyId, isInterval }: Props) {
   useEffect(() => {
     console.log("Selected Dates:", hobbyDates);
   }, [hobbyDates])
+
 
   const getAllHobbyDates = async () => {
     try {
@@ -84,7 +86,7 @@ export default function WeekCalendar({ hobbyId, isInterval }: Props) {
     }
   }
 
-  const toggleSelectHobbyDates = (day: dayjs.Dayjs) => {
+  const toggleSelectHobbyDates = async (day: dayjs.Dayjs) => {
     //const hobbyDatesOnly = hobbyDates.map((hd) => hd.date);
     // true or false, if the clicked day was already selected
     const alreadySelected = hobbyDates.filter((d) => d.hobbyId == hobbyId).map((hd) => dayjs(hd.date)).some((d) => d.isSame(day, 'day'));
@@ -96,26 +98,34 @@ export default function WeekCalendar({ hobbyId, isInterval }: Props) {
 
       if (hobbyDateToRemove) {
         HobbyClient.removeHobbyDate(hobbyDateToRemove);
-        HobbyClient.removeHobbyPoints(hobbyId);
+        const updatedPoints = await HobbyClient.removeHobbyPoints(hobbyId);
+
+        setHobbies((prev) =>
+          prev?.map((hobby) =>
+            hobby.id === hobbyId
+              ? { ...hobby, pointsCurrent: updatedPoints }
+              : hobby
+          )
+        );
       }
     } else {
-      setHobbyDates((prev) => [
-        ...prev,
-        {
-          id: 0,
-          hobbyId,
-          date: day.startOf('day').format('YYYY-MM-DD'),
-        },
-      ]);
 
       const hobbyDateToAdd: HobbyDates = {
         id: 0,
         hobbyId,
         date: day.startOf('day').format('YYYY-MM-DD'),
       };
-      HobbyClient.updateHobbyDate(hobbyDateToAdd);
-      HobbyClient.updateHobbyPoints(hobbyId);
+      const createdHobbyDate = await HobbyClient.updateHobbyDate(hobbyDateToAdd); // to get the id from the backend
+      const updatedPoints = await HobbyClient.updateHobbyPoints(hobbyId);
 
+      setHobbies((prev) =>
+        prev?.map((hobby) =>
+          hobby.id === hobbyId
+            ? { ...hobby, pointsCurrent: updatedPoints }
+            : hobby
+        )
+      );
+      setHobbyDates((prev) => [...prev, createdHobbyDate]);
     }
   };
 

@@ -60,7 +60,7 @@ function Hobbies() {
         ERROR = "error",
     }
 
-    const [hobbies, setHobbies] = useState<Hobby[]>()
+    const [hobbies, setHobbies] = useState<Hobby[]>([])
     const [openHobbyEditModal, setOpenHobbyEditModal] = useState(false)
     const [openToast, setOpenToast] = useState(false)
     const [toastMessage, setToastMessage] = useState('')
@@ -452,7 +452,7 @@ function Hobbies() {
                                     </Typography>
 
                                     <div className='row-two'>
-                                        <WeekCalendar hobbyId={hobby.id}></WeekCalendar>
+                                        <WeekCalendar hobbyId={hobby.id} setHobbies={setHobbies}></WeekCalendar>
                                     </div>
                                 </div>
 
