@@ -5,6 +5,7 @@ import * as HobbyClient from '../client/hobby.tsx';
 import type { HobbyDates } from '../interfaces/HobbyDates.tsx';
 import type { PointsInterval } from '../interfaces/PointsInterval.tsx';
 import type { Hobby } from '../interfaces/Hobby.tsx';
+import type { DaysOfWeek } from '../interfaces/DaysOfWeek.tsx';
 
 interface Props {
   hobbyId: number;
@@ -16,14 +17,14 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   const today = dayjs();
   const startOfWeek = today.startOf('week'); // Sunday
   const [hobbyDates, setHobbyDates] = useState<HobbyDates[]>([]);
-  const [intervalDates, setIntervalDates] = useState<number[]>([]);
+  const [intervalDatesWeeks, setIntervalDatesWeeks] = useState<number[]>([]);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => startOfWeek.add(i, 'day'));
 
   useEffect(() => {
     switch (isInterval) {
       case true:
-        getIntervalDates();
+        getHobbyById();
         break;
       case false:
         getAllHobbyDates();
@@ -50,13 +51,28 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
     }
   }
 
-  const getIntervalDates = async () => {
+  const getHobbyById = async () => {
     try {
+      const res = await HobbyClient.getHobbyById(hobbyId);
+      console.log("Hobby by ID:", res.data);
+      setIntervalDatesWeeks(
+        res.data.intervalDaysOfWeek.map((day: DaysOfWeek) => daysOfWeekToNumber[day])
+      );
 
     } catch (error) {
       console.error("Error fetching hobby dates:", error);
     }
-  }
+  };
+
+  const daysOfWeekToNumber: Record<DaysOfWeek, number> = {
+    MONDAY: 1,
+    TUESDAY: 2,
+    WEDNESDAY: 3,
+    THURSDAY: 4,
+    FRIDAY: 5,
+    SATURDAY: 6,
+    SUNDAY: 7,
+  };
 
   // purpose is to remap 0-6 to 1-7, where 1 is Monday and 7 is Sunday
   const weekdayNumber = (date: dayjs.Dayjs): number => {
@@ -64,25 +80,84 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
     return d === 0 ? 7 : d;
   };
 
-  const toggleSelectIntervalDates = (day: dayjs.Dayjs) => {
-    const alreadySelected = intervalDates.filter((i) => i === weekdayNumber(day));
+  const jsDayToDaysOfWeek: Record<number, DaysOfWeek> = {
+    0: "SUNDAY",
+    1: "MONDAY",
+    2: "TUESDAY",
+    3: "WEDNESDAY",
+    4: "THURSDAY",
+    5: "FRIDAY",
+    6: "SATURDAY",
+  };
 
-    if (alreadySelected) {
+  function toDaysOfWeekArray(dayNumbers: number[]): DaysOfWeek[] {
+    return dayNumbers.map(dayNumber => {
+      if (dayNumber < 0 || dayNumber > 6) {
+        throw new Error(`Invalid day number: ${dayNumber}`);
+      }
+      return jsDayToDaysOfWeek[dayNumber];
+    });
+  }
+
+  const toggleSelectIntervalDates = (day: dayjs.Dayjs) => {
+    const alreadySelected = intervalDatesWeeks.filter((i) => i === weekdayNumber(day));
+    console.log(intervalDatesWeeks)
+    console.log(alreadySelected);
+
+    if (alreadySelected && alreadySelected.length > 0) {
+
       // remove the day from the intervalDates
-      setIntervalDates((prev) => prev.filter((i) => i !== weekdayNumber(day)));
-      const intervalDateToRemove = intervalDates.find((i) => i === weekdayNumber(day));
+      setIntervalDatesWeeks((prev) => prev.filter((i) => i !== weekdayNumber(day)));
+      const intervalDateToRemove = intervalDatesWeeks.find((i) => i === weekdayNumber(day));
+      const updatedIntervalDays = intervalDatesWeeks
+        .filter(day => day !== intervalDateToRemove);
+      /* new hobby with only intervalDateToRemove */
+
+      const newHobby: Hobby = {
+        id: hobbyId,
+        name: "",
+        description: undefined,
+        interestLevel: 0,
+        effortLevel: 0,
+        categories: [],
+        pluspoints: [],
+        minuspoints: [],
+        pointIntervalType: "WEEKLY" as PointsInterval,
+        intervalDaysOfWeek: toDaysOfWeekArray(updatedIntervalDays),
+        intervalDaysOfMonth: [],
+        pointsCurrent: 0,
+        pointsValued: 0
+      };
 
       if (intervalDateToRemove) {
-        HobbyClient.removeIntervalDate(intervalDateToRemove);
+        HobbyClient.patchHobby(newHobby.id, newHobby);
       }
     } else {
-      setIntervalDates((prev) => [
+      const intervalDateToAdd: number = weekdayNumber(day);
+
+      const newHobby: Hobby = {
+        id: hobbyId,
+        name: "",
+        description: undefined,
+        interestLevel: 0,
+        effortLevel: 0,
+        categories: [],
+        pluspoints: [],
+        minuspoints: [],
+        pointIntervalType: "WEEKLY" as PointsInterval,
+        intervalDaysOfWeek: toDaysOfWeekArray([...intervalDatesWeeks, intervalDateToAdd]),
+        intervalDaysOfMonth: [],
+        pointsCurrent: 0,
+        pointsValued: 0
+      };
+
+      setIntervalDatesWeeks((prev) => [
         ...prev,
-        weekdayNumber(day),
+        intervalDateToAdd
       ]);
 
-      const intervalDateToAdd: number = weekdayNumber(day);
-      HobbyClient.updateIntervalDate(intervalDateToAdd);
+      console.log("New Hobby to patch:", newHobby);
+      HobbyClient.patchHobby(newHobby.id, newHobby);
     }
   }
 
@@ -130,6 +205,7 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   };
 
   const determineToggleSelect = (day: dayjs.Dayjs) => {
+    console.log("hobbyid", hobbyId)
     if (isInterval) {
       toggleSelectIntervalDates(day);
     } else {
@@ -140,8 +216,6 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   return (
     <Box display="flex" gap={1} onClick={(e) => e.stopPropagation()}>
       {weekDays.map((day) => {
-
-
         // determine if the day is selected
         const hobbyDatesOnly = hobbyDates
           .filter(hd => hd.hobbyId === hobbyId)
@@ -150,7 +224,7 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
         let isSelected: boolean;
         let isToday: boolean;
         if (isInterval) {
-          isSelected = intervalDates.includes(weekdayNumber(day));
+          isSelected = intervalDatesWeeks.includes(weekdayNumber(day));
           isToday = false;
         } else {
           isSelected = hobbyDatesOnly.some(d => d.isSame(day, "day"));

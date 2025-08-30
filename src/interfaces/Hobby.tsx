@@ -13,7 +13,7 @@ export interface Hobby {
   pluspoints: Point[]
   minuspoints: Point[]
   pointIntervalType: PointsInterval
-  intervalPointsDaysOfWeek: DaysOfWeek[]
+  intervalDaysOfWeek: DaysOfWeek[]
   intervalDaysOfMonth: number[]
   pointsCurrent: number
   pointsValued: number

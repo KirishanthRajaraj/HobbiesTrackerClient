@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type SetStateAction } from 'react'
 import '../App.css'
 import { Alert, Autocomplete, Box, Button, IconButton, Modal, Slider, Snackbar, TextareaAutosize, TextField, ToggleButton, ToggleButtonGroup, Typography } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close';
@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import * as HobbyClient from '../client/hobby.tsx';
 import * as CategoryClient from '../client/category.tsx';
 import type { Hobby } from '../interfaces/Hobby.tsx';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { Label } from '@mui/icons-material';
 import type { Category } from '../interfaces/Category.tsx';
 import CategoryToggleGroup from '../components/CategoryToggleGroup.tsx';
@@ -31,7 +32,7 @@ function Hobbies() {
         pluspoints: [],
         minuspoints: [],
         pointIntervalType: "DAILY",
-        intervalPointsDaysOfWeek: [],
+        intervalDaysOfWeek: [],
         intervalDaysOfMonth: [],
         pointsCurrent: 0,
         pointsValued: 0,
@@ -47,7 +48,7 @@ function Hobbies() {
         pluspoints: [],
         minuspoints: [],
         pointIntervalType: "DAILY",
-        intervalPointsDaysOfWeek: [],
+        intervalDaysOfWeek: [],
         intervalDaysOfMonth: [],
         pointsCurrent: 0,
         pointsValued: 0,
@@ -62,6 +63,7 @@ function Hobbies() {
 
     const [hobbies, setHobbies] = useState<Hobby[]>([])
     const [openHobbyEditModal, setOpenHobbyEditModal] = useState(false)
+    const [openCalenderModal, setOpenCalenderModal] = useState(false)
     const [openToast, setOpenToast] = useState(false)
     const [toastMessage, setToastMessage] = useState('')
     const [toastType, setToastType] = useState<ToastType>(ToastType.ERROR)
@@ -115,6 +117,10 @@ function Hobbies() {
         setOpenHobbyEditModal(false)
     }
 
+    const closeCalenderModal = () => {
+        setOpenCalenderModal(false)
+    }
+
     const handleOpenHobbyAddModal = () => {
         // reset edit hobby
         setEditHobby({
@@ -127,7 +133,7 @@ function Hobbies() {
             pluspoints: [],
             minuspoints: [],
             pointIntervalType: "DAILY",
-            intervalPointsDaysOfWeek: [],
+            intervalDaysOfWeek: [],
             intervalDaysOfMonth: [],
             pointsCurrent: 0,
             pointsValued: 0,
@@ -142,7 +148,7 @@ function Hobbies() {
             pluspoints: [],
             minuspoints: [],
             pointIntervalType: "DAILY",
-            intervalPointsDaysOfWeek: [],
+            intervalDaysOfWeek: [],
             intervalDaysOfMonth: [],
             pointsCurrent: 0,
             pointsValued: 0,
@@ -210,7 +216,7 @@ function Hobbies() {
             pluspoints: plusPointsToUpdate,
             minuspoints: minusPointsToUpdate,
             pointIntervalType: "DAILY",
-            intervalPointsDaysOfWeek: [],
+            intervalDaysOfWeek: [],
             intervalDaysOfMonth: [],
             pointsCurrent: currentHobby.pointsCurrent || 0,
             pointsValued: currentHobby.pointsValued || 0,
@@ -308,6 +314,17 @@ function Hobbies() {
         console.log("current hobbyy", currentHobby);
     }, [currentHobby]);
 
+    const renderCalenderModal = () => {
+        return (
+            <Modal className='flex justify-center align-center' open={openCalenderModal} onClose={closeCalenderModal} component="div">
+                <div className='w-auto h-auto flex justify-center align-center flex-col rounded-3xl overflow-x-auto my-6'>
+                    <div className='bg-neutral-950 p-12 rounded-xl flex flex-col scroll-auto'>
+                        <HighlightCalendar hobbyId={currentHobby.id} isInterval={false} setHobbies={setHobbies} />
+                    </div>
+                </div>
+            </Modal>
+        )
+    }
 
     const renderHobbyEditModal = () => {
         return (
@@ -398,11 +415,11 @@ function Hobbies() {
                         />
 
                         {selectedInterval === "WEEKLY" && (
-                            <WeekCalendar hobbyId={currentHobby.id} />
+                            <WeekCalendar hobbyId={currentHobby.id} isInterval={true} setHobbies={setHobbies} />
                         )}
 
                         {selectedInterval === "CUSTOM" && (
-                            <HighlightCalendar />
+                            <HighlightCalendar hobbyId={currentHobby.id} isInterval={false} setHobbies={setHobbies} />
                         )}
 
                         <Button className='mt-5 bg-yellow-400 hover:bg-yellow-300 text-black font-semibold px-4 py-2 rounded-xl shadow-md transition duration-200 hover:border-[#ffcc00]!' variant='outlined' onClick={handleAddEditHobby}>{editHobby?.id === currentHobby.id ? "Edit" : "Create"}</Button>
@@ -452,7 +469,7 @@ function Hobbies() {
                                     </Typography>
 
                                     <div className='row-two'>
-                                        <WeekCalendar hobbyId={hobby.id} setHobbies={setHobbies}></WeekCalendar>
+                                        <WeekCalendar hobbyId={hobby.id} setHobbies={setHobbies} isInterval={false}></WeekCalendar>
                                     </div>
                                 </div>
 
@@ -469,6 +486,15 @@ function Hobbies() {
                                     <IconButton color="primary" onClick={() => handleDeleteHobby(hobby)}>
                                         <DeleteIcon sx={{ color: "black" }} />
                                     </IconButton>
+
+
+                                    <IconButton color="primary" onClick={(e) => {
+                                        e.stopPropagation();
+                                        setCurrentHobby(hobby);
+                                        setOpenCalenderModal(true)
+                                    }}>
+                                        <CalendarMonthIcon sx={{ color: "black" }} />
+                                    </IconButton>
                                 </div>
                             </div>
 
@@ -479,6 +505,8 @@ function Hobbies() {
 
                 <Button variant='outlined' color='secondary' className='bg-orange-500 hover:border-[#ffcc00]! mb-16!' onClick={handleOpenHobbyAddModal}>Create</Button>
                 {renderHobbyEditModal()}
+
+                {renderCalenderModal()}
 
                 {renderToast()}
 
