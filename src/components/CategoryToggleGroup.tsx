@@ -1,3 +1,5 @@
+import { useEffect } from "react";
+
 interface BaseProps<T> {
   items: T[];
   getKey: (item: T) => string | number;
@@ -20,6 +22,17 @@ export type ToggleGroupProps<T> = MultiProps<T> | SingleProps<T>;
 
 export default function ToggleGroup<T>(props: ToggleGroupProps<T>) {
   const { items, getKey, getLabel } = props;
+
+  useEffect(() => {
+    if (props?.selected) {
+      if (Array.isArray(props.selected)) {
+        props.selected.forEach(item => handleToggle(item));
+      } else {
+        handleToggle(props.selected);
+      }
+    }
+
+  }, []);
 
   const handleToggle = (item: T) => {
     if (props.multiple) {

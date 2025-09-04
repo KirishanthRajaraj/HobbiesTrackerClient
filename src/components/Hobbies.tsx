@@ -102,9 +102,7 @@ function Hobbies() {
     {/* management of plus and minuspoints */ }
 
     const onChangeCategories = (newCategories: Category[]) => {
-        console.log("clicked");
         setCurrentHobby((prev) => ({ ...prev, categories: newCategories }));
-        console.log("newCategories", newCategories);
         setSelectedCategories(newCategories);
     }
 
@@ -163,7 +161,6 @@ function Hobbies() {
     }
 
     const handleEditHobby = (editHobby: Hobby) => {
-        console.log("editHobby", editHobby);
         setCurrentHobby(editHobby);
         setPlusPoints(editHobby.pluspoints || [{ id: Date.now(), text: "", hobbyId: editHobby.id }]);
         setMinusPoints(editHobby.minuspoints || [{ id: Date.now() + 1, text: "", hobbyId: editHobby.id }]);
@@ -259,7 +256,6 @@ function Hobbies() {
         try {
             HobbyClient.getAllHobbies().then((res) => {
                 setHobbies(res.data);
-                console.log("hobbies", res.data);
             }).catch((err) => {
                 console.error("Error fetching hobbies:", err);
             });
@@ -306,9 +302,9 @@ function Hobbies() {
     }, [plusPoints, minusPoints]);
 
 
-    useEffect(() => {
+    /*useEffect(() => {
         console.log("categories", categories);
-    }, [categories]);
+    }, [categories]);*/
 
     useEffect(() => {
         console.log("current hobbyy", currentHobby);
@@ -406,7 +402,7 @@ function Hobbies() {
                         <TextField label="Valued points" type='number' className='mb-4!' variant="standard" color='primary' value={currentHobby.pointsValued ?? 0} onChange={(e) => setCurrentHobby((prev) => ({ ...prev, pointsValued: e.target.value as unknown as number }))}></TextField>
 
                         <CategoryToggleGroup
-                            items={["DAILY", "WEEKLY", "CUSTOM"]}
+                            items={["DAILY", "WEEKLY"]}
                             selected={currentHobby.pointIntervalType}
                             onChange={(newInterval) => onChangeIntervalPointType(newInterval as PointsInterval)}
                             getKey={(c) => c}

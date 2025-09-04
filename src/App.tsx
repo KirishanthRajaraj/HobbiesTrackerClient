@@ -4,6 +4,8 @@ import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import BottomNav from './components/BottomNav';
 import Home from './components/Hobbies';
 import HobbyRecommendation from './components/HobbyRecommendation';
+import Login from './components/Login';
+import Register from './components/Register';
 
 function App() {
 
@@ -14,6 +16,8 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/recommendation" element={<HobbyRecommendation />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
         <BottomNav />
 

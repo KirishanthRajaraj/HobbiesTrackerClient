@@ -16,6 +16,7 @@ interface Props {
 
 export default function MyCalendar({ hobbyId, isInterval, setHobbies }: Props) {
   const [hobbyDates, setHobbyDates] = useState<HobbyDates[]>([]);
+  const [intervalDatesMonths, setIntervalDatesMonths] = useState<number[]>([]);
 
   useEffect(() => {
     getHobbyDatesByHobbyId();

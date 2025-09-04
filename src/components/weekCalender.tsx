@@ -54,7 +54,6 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   const getHobbyById = async () => {
     try {
       const res = await HobbyClient.getHobbyById(hobbyId);
-      console.log("Hobby by ID:", res.data);
       setIntervalDatesWeeks(
         res.data.intervalDaysOfWeek.map((day: DaysOfWeek) => daysOfWeekToNumber[day])
       );
@@ -101,8 +100,6 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
 
   const toggleSelectIntervalDates = (day: dayjs.Dayjs) => {
     const alreadySelected = intervalDatesWeeks.filter((i) => i === weekdayNumber(day));
-    console.log(intervalDatesWeeks)
-    console.log(alreadySelected);
 
     if (alreadySelected && alreadySelected.length > 0) {
 
@@ -156,7 +153,6 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
         intervalDateToAdd
       ]);
 
-      console.log("New Hobby to patch:", newHobby);
       HobbyClient.patchHobby(newHobby.id, newHobby);
     }
   }
@@ -205,7 +201,6 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   };
 
   const determineToggleSelect = (day: dayjs.Dayjs) => {
-    console.log("hobbyid", hobbyId)
     if (isInterval) {
       toggleSelectIntervalDates(day);
     } else {
@@ -214,43 +209,62 @@ export default function WeekCalendar({ hobbyId, isInterval, setHobbies }: Props)
   };
 
   return (
-    <Box display="flex" gap={1} onClick={(e) => e.stopPropagation()}>
-      {weekDays.map((day) => {
-        // determine if the day is selected
-        const hobbyDatesOnly = hobbyDates
-          .filter(hd => hd.hobbyId === hobbyId)
-          .map(hd => dayjs(hd.date));
+    <Box gap={1} onClick={(e) => e.stopPropagation()}>
 
-        let isSelected: boolean;
-        let isToday: boolean;
-        if (isInterval) {
-          isSelected = intervalDatesWeeks.includes(weekdayNumber(day));
-          isToday = false;
-        } else {
-          isSelected = hobbyDatesOnly.some(d => d.isSame(day, "day"));
-          isToday = day.isSame(today, "day");
-        }
+      <div className={`${isInterval ? 'mb-4!' : 'mt-0'} flex! gap-2`}>
 
+        {weekDays.map((day) => {
+          // determine if the day is selected
 
-        return (
-          <div key={day.format('YYYY-MM-DD')} className="text-center">
-            <Typography className="text-gray-700 font-bold" variant="body2">
-              {day.format('ddd')}
-            </Typography>
-            <div
-              onClick={() => determineToggleSelect(day)}
-              className={`
+          const hobbyDatesOnly = hobbyDates
+            .filter(hd => hd.hobbyId === hobbyId)
+            .map(hd => dayjs(hd.date));
+
+          let isSelected: boolean;
+          let isToday: boolean;
+          if (isInterval) {
+            isSelected = intervalDatesWeeks.includes(weekdayNumber(day));
+            isToday = false;
+          } else {
+            isSelected = hobbyDatesOnly.some(d => d.isSame(day, "day"));
+            isToday = day.isSame(today, "day");
+          }
+
+          return (
+            <div key={day.format('YYYY-MM-DD')} className="text-center">
+              <Typography
+                className={`font-bold
+                `}
+                variant="body2"
+                sx={{
+                  color: isInterval ? "#fff" : "#000",
+                }}
+              >
+                {day.format("ddd")}
+              </Typography>
+              <div
+                onClick={() => determineToggleSelect(day)}
+                className={`
                 cursor-pointer p-2 rounded-xl leading-1 aspect-square w-10 text-md flex items-center justify-center font-bold transition-colors duration-300
                 ${isSelected ? 'bg-green-500 text-black' : 'bg-transparent text-gray-800'} 
                 ${isToday ? 'border-2 border-black' : 'border-2 border-gray-200'} 
                 hover:${isSelected ? 'bg-yellow-600' : 'bg-gray-300'}
+                ${isInterval ? 'mb-4' : 'mb-0'}
               `}
-            >
-              <Typography variant="inherit">{day.format('D')}</Typography>
+              >
+                <Typography
+                  variant="inherit"
+                  sx={{
+                    color: isInterval && !isSelected ? "#fff" : undefined,
+                  }}
+                >
+                  {day.format("D")}
+                </Typography>            </div>
             </div>
-          </div>
-        );
-      })}
+          );
+        })}
+      </div>
+
     </Box>
   );
 }
